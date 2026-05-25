@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NŌVA — Loja Conceito</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #080808;
+  --off-black: #111010;
+  --surface: #161514;
+  --surface2: #1E1C1B;
+  --gold: #C9A84C;
+  --gold2: #E8CC7A;
+  --gold-dim: rgba(201,168,76,.15);
+  --white: #F5F2EC;
+  --muted: #7A7570;
+  --border: rgba(201,168,76,.18);
+  --red: #C0392B;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:'Syne',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* CURSOR */
+#cursor{position:fixed;width:10px;height:10px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(201,168,76,.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .12s ease;}
+body:hover #cursor{opacity:1;}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--black);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .8s;}
+#loader.hide{opacity:0;pointer-events:none;}
+.loader-logo{font-family:'Cormorant Garamond',serif;font-size:3rem;letter-spacing:.3em;color:var(--gold);}
+.loader-bar-wrap{width:200px;height:1px;background:rgba(255,255,255,.1);}
+.loader-bar{height:1px;background:var(--gold);width:0%;transition:width 1.8s ease;}
+.loader-text{font-size:11px;letter-spacing:.2em;color:var(--muted);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.4rem 3rem;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(8,8,8,.95),transparent);backdrop-filter:blur(4px);}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.6rem;letter-spacing:.25em;color:var(--gold);font-weight:300;}
+.nav-links{display:flex;gap:2rem;align-items:center;}
+.nav-link{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:color .2s;background:none;border:none;font-family:'Syne',sans-serif;}
+.nav-link:hover,.nav-link.active{color:var(--white);}
+.nav-right{display:flex;gap:1.2rem;align-items:center;}
+.cart-btn{position:relative;cursor:pointer;background:none;border:none;color:var(--white);}
+.cart-count{position:absolute;top:-8px;right:-8px;width:18px;height:18px;background:var(--gold);color:#000;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+/* HERO */
+#hero{height:100vh;position:relative;display:flex;align-items:center;overflow:hidden;}
+#canvas3d{position:absolute;inset:0;width:100%;height:100%;}
+.hero-content{position:relative;z-index:2;padding:0 8vw;max-width:700px;}
+.hero-eyebrow{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;}
+.hero-eyebrow::before{content:'';display:inline-block;width:40px;height:1px;background:var(--gold);}
+.hero-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(3.5rem,7vw,6.5rem);line-height:1.05;font-weight:300;margin-bottom:1.8rem;}
+.hero-h1 em{font-style:italic;color:var(--gold);}
+.hero-p{font-size:14px;color:var(--muted);line-height:1.8;max-width:400px;margin-bottom:2.5rem;font-weight:400;}
+.hero-cta{display:inline-flex;align-items:center;gap:12px;border:1px solid var(--gold);color:var(--gold);padding:14px 32px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;background:transparent;font-family:'Syne',sans-serif;transition:all .3s;}
+.hero-cta:hover{background:var(--gold);color:#000;}
+.hero-scroll{position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-size:10px;letter-spacing:.2em;}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--gold),transparent);animation:scrollPulse 2s ease infinite;}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(1);}50%{opacity:1;transform:scaleY(1.2);}}
+
+/* SECTIONS */
+section{padding:6rem 6vw;}
+.section-label{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3.2rem);font-weight:300;line-height:1.2;margin-bottom:3rem;}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+
+/* PRODUTOS GRID */
+#loja{background:var(--off-black);}
+.produtos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2px;}
+.prod-card{background:var(--surface);overflow:hidden;cursor:pointer;position:relative;group;}
+.prod-img-wrap{height:320px;overflow:hidden;position:relative;background:var(--surface2);}
+.prod-3d-canvas{width:100%;height:100%;display:block;}
+.prod-badge{position:absolute;top:1rem;left:1rem;background:var(--gold);color:#000;font-size:10px;letter-spacing:.1em;padding:4px 10px;font-weight:700;}
+.prod-badge.novo{background:var(--gold);}
+.prod-badge.off{background:var(--red);color:#fff;}
+.prod-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s;display:flex;align-items:center;justify-content:center;}
+.prod-card:hover .prod-overlay{opacity:1;}
+.btn-quick{background:var(--white);color:#000;border:none;padding:10px 24px;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.15em;cursor:pointer;}
+.prod-info{padding:1.2rem 1.4rem;}
+.prod-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:400;margin-bottom:.3rem;}
+.prod-cat{font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:.6rem;}
+.prod-price-row{display:flex;align-items:center;gap:.8rem;}
+.prod-price{font-size:1rem;font-weight:700;color:var(--gold);}
+.prod-price-old{font-size:.85rem;color:var(--muted);text-decoration:line-through;}
+.prod-actions{display:flex;gap:8px;margin-top:1rem;}
+.btn-add{flex:1;background:transparent;border:1px solid var(--border);color:var(--white);padding:9px;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.1em;cursor:pointer;transition:all .2s;}
+.btn-add:hover{background:var(--gold);color:#000;border-color:var(--gold);}
+.btn-wish{width:38px;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:16px;transition:all .2s;}
+.btn-wish:hover{color:var(--gold);border-color:var(--gold);}
+
+/* CART DRAWER */
+#cart-drawer{position:fixed;right:0;top:0;bottom:0;width:400px;background:var(--surface);z-index:2000;transform:translateX(100%);transition:transform .4s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-left:1px solid var(--border);}
+#cart-drawer.open{transform:translateX(0);}
+.cart-header{padding:1.5rem 1.8rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:400;}
+.cart-close{background:none;border:none;color:var(--white);font-size:1.5rem;cursor:pointer;line-height:1;}
+.cart-items{flex:1;overflow-y:auto;padding:1rem 1.8rem;}
+.cart-item{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.cart-item-img{width:72px;height:72px;background:var(--surface2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
+.cart-item-info{flex:1;}
+.cart-item-name{font-family:'Cormorant Garamond',serif;font-size:1rem;margin-bottom:.3rem;}
+.cart-item-price{font-size:.9rem;color:var(--gold);font-weight:700;}
+.cart-item-qty{display:flex;align-items:center;gap:.6rem;margin-top:.5rem;}
+.qty-btn{width:24px;height:24px;background:var(--surface2);border:1px solid var(--border);color:var(--white);cursor:pointer;font-size:14px;}
+.qty-val{font-size:13px;min-width:20px;text-align:center;}
+.cart-item-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:4px;}
+.cart-footer{padding:1.5rem 1.8rem;border-top:1px solid var(--border);}
+.cart-total-row{display:flex;justify-content:space-between;margin-bottom:1.2rem;}
+.cart-total-label{font-size:12px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;}
+.cart-total-val{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold);}
+.btn-checkout{width:100%;background:var(--gold);color:#000;border:none;padding:16px;font-family:'Syne',sans-serif;font-size:12px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;font-weight:700;transition:opacity .2s;}
+.btn-checkout:hover{opacity:.85;}
+.cart-empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.cart-empty p{font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-top:.5rem;}
+
+/* ADMIN */
+#admin-section{background:var(--off-black);min-height:100vh;padding:2rem 2.5rem;}
+.admin-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+.admin-logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--gold);}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+.a-stat{background:var(--surface);border:1px solid var(--border);padding:1.2rem 1.5rem;border-radius:4px;}
+.a-stat-label{font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:.5rem;}
+.a-stat-val{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--gold);}
+.a-stat-sub{font-size:11px;color:var(--muted);margin-top:.3rem;}
+.admin-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:1.5rem;}
+.admin-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;}
+.admin-card-header{padding:1rem 1.3rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.admin-card-title{font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);}
+.admin-card-body{padding:1rem;}
+.form-admin{display:flex;flex-direction:column;gap:.8rem;}
+.fa-group{display:flex;flex-direction:column;gap:.3rem;}
+.fa-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.fa-input{background:var(--surface2);border:1px solid var(--border);color:var(--white);padding:9px 12px;font-family:'Syne',sans-serif;font-size:13px;outline:none;border-radius:2px;width:100%;}
+.fa-input:focus{border-color:var(--gold);}
+.fa-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.btn-save{background:var(--gold);color:#000;border:none;padding:11px 24px;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.2em;cursor:pointer;font-weight:700;margin-top:.4rem;}
+.btn-save:hover{opacity:.85;}
+.prod-table{width:100%;border-collapse:collapse;font-size:13px;}
+.prod-table th{text-align:left;font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;padding:.7rem .8rem;border-bottom:1px solid var(--border);}
+.prod-table td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+.prod-table tr:hover td{background:rgba(201,168,76,.04);}
+.tbl-name{font-family:'Cormorant Garamond',serif;font-size:.95rem;}
+.tbl-price{color:var(--gold);font-weight:700;}
+.tbl-stock{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;}
+.stock-ok{background:rgba(74,162,89,.15);color:#4AA259;}
+.stock-low{background:rgba(192,57,43,.15);color:#C0392B;}
+.btn-tbl{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px 6px;transition:color .2s;}
+.btn-tbl:hover{color:var(--gold);}
+.orders-list{display:flex;flex-direction:column;gap:.6rem;}
+.order-item{background:var(--surface2);border:1px solid rgba(255,255,255,.05);padding:.8rem 1rem;border-radius:2px;display:flex;align-items:center;justify-content:space-between;gap:.8rem;font-size:13px;}
+.order-id{font-family:'Cormorant Garamond',serif;color:var(--muted);font-size:.9rem;}
+.order-total{color:var(--gold);font-weight:700;}
+.badge-status{font-size:10px;letter-spacing:.08em;padding:3px 10px;border-radius:999px;}
+.s-novo{background:rgba(201,168,76,.15);color:var(--gold);}
+.s-env{background:rgba(74,162,89,.15);color:#4AA259;}
+.s-canc{background:rgba(192,57,43,.15);color:#C0392B;}
+
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--gold);color:var(--white);padding:12px 24px;font-size:13px;opacity:0;transition:all .3s;pointer-events:none;z-index:5000;letter-spacing:.05em;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* OVERLAY */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500;display:none;backdrop-filter:blur(4px);}
+#overlay.open{display:block;}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem;}
+  .nav-links{display:none;}
+  .hero-h1{font-size:2.8rem;}
+  #cart-drawer{width:100%;}
+  .admin-grid{grid-template-columns:1fr;}
+  .admin-stats{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">NŌVA</div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
+  <div class="loader-text">CARREGANDO EXPERIÊNCIA</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">NŌVA</div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showView('loja')">Coleção</button>
+    <button class="nav-link" onclick="showView('admin')">Admin</button>
+  </div>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="toggleCart()" aria-label="Carrinho">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- LOJA VIEW -->
+<div class="view active" id="view-loja">
+  <!-- HERO 3D -->
+  <div id="hero">
+    <canvas id="canvas3d"></canvas>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Nova Coleção 2026</div>
+      <h1 class="hero-h1">Objetos que<br>definem <em>espaços</em></h1>
+      <p class="hero-p">Peças únicas criadas com materiais selecionados. Design que transcende o tempo.</p>
+      <button class="hero-cta" onclick="document.getElementById('loja').scrollIntoView({behavior:'smooth'})">
+        Explorar coleção
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="hero-scroll"><div class="scroll-line"></div>SCROLL</div>
+  </div>
+
+  <!-- PRODUTOS -->
+  <section id="loja">
+    <div class="section-label">Coleção completa</div>
+    <div class="section-title">Todos os produtos</div>
+    <div class="produtos-grid" id="produtos-grid">
+      <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:'Cormorant Garamond',serif;font-size:1.2rem;">Carregando produtos...</div>
+    </div>
+  </section>
+</div>
+
+<!-- ADMIN VIEW -->
+<div class="view" id="view-admin">
+  <div id="admin-section">
+    <div class="admin-topbar">
+      <div class="admin-logo">NŌVA — Painel Admin</div>
+      <div style="display:flex;gap:1rem;align-items:center;">
+        <span style="font-size:12px;color:var(--muted);" id="firebase-status">● Conectando Firebase...</span>
+        <button onclick="showView('loja')" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 16px;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:.1em;cursor:pointer;">← Voltar à loja</button>
+      </div>
+    </div>
+
+    <div class="admin-stats">
+      <div class="a-stat">
+        <div class="a-stat-label">Produtos</div>
+        <div class="a-stat-val" id="stat-prods">—</div>
+        <div class="a-stat-sub">cadastrados</div>
+      </div>
+      <div class="a-stat">
+        <div class="a-stat-label">Pedidos</div>
+        <div class="a-stat-val" id="stat-orders">—</div>
+        <div class="a-stat-sub">recebidos</div>
+      </div>
+      <div class="a-stat">
+        <div class="a-stat-label">Receita</div>
+        <div class="a-stat-val" id="stat-revenue">—</div>
+        <div class="a-stat-sub">total R$</div>
+      </div>
+      <div class="a-stat">
+        <div class="a-stat-label">Itens vendidos</div>
+        <div class="a-stat-val" id="stat-items">—</div>
+        <div class="a-stat-sub">unidades</div>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+      <!-- FORM NOVO PRODUTO -->
+      <div>
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <span class="admin-card-title">Adicionar produto</span>
+          </div>
+          <div class="admin-card-body">
+            <form class="form-admin" onsubmit="salvarProduto(event)">
+              <div class="fa-group">
+                <label class="fa-label">Nome do produto</label>
+                <input class="fa-input" id="p-nome" placeholder="Ex: Vaso Cerâmica" required>
+              </div>
+              <div class="fa-group">
+                <label class="fa-label">Descrição</label>
+                <input class="fa-input" id="p-desc" placeholder="Descrição curta">
+              </div>
+              <div class="fa-grid">
+                <div class="fa-group">
+                  <label class="fa-label">Preço (R$)</label>
+                  <input class="fa-input" id="p-preco" type="number" step="0.01" placeholder="0,00" required>
+                </div>
+                <div class="fa-group">
+                  <label class="fa-label">Estoque</label>
+                  <input class="fa-input" id="p-estoque" type="number" placeholder="0" required>
+                </div>
+              </div>
+              <div class="fa-grid">
+                <div class="fa-group">
+                  <label class="fa-label">Categoria</label>
+                  <select class="fa-input" id="p-cat">
+                    <option value="Decoração">Decoração</option>
+                    <option value="Mobiliário">Mobiliário</option>
+                    <option value="Iluminação">Iluminação</option>
+                    <option value="Têxtil">Têxtil</option>
+                    <option value="Arte">Arte</option>
+                  </select>
+                </div>
+                <div class="fa-group">
+                  <label class="fa-label">Desconto %</label>
+                  <input class="fa-input" id="p-desc-pct" type="number" min="0" max="90" placeholder="0">
+                </div>
+              </div>
+              <div class="fa-group">
+                <label class="fa-label">Emoji / Ícone do produto</label>
+                <input class="fa-input" id="p-emoji" placeholder="Ex: 🏺 🪔 🛋️" maxlength="4">
+              </div>
+              <button type="submit" class="btn-save" id="btn-save-prod">+ Salvar produto</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- PEDIDOS -->
+        <div class="admin-card" style="margin-top:1rem;">
+          <div class="admin-card-header">
+            <span class="admin-card-title">Últimos pedidos</span>
+          </div>
+          <div class="admin-card-body">
+            <div class="orders-list" id="orders-list">
+              <div style="color:var(--muted);font-size:13px;">Carregando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABELA PRODUTOS -->
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <span class="admin-card-title">Produtos cadastrados</span>
+          <span style="font-size:11px;color:var(--muted);" id="tbl-count">0 itens</span>
+        </div>
+        <div class="admin-card-body" style="padding:0;overflow-x:auto;">
+          <table class="prod-table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="prod-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CART DRAWER -->
+<div id="overlay" onclick="toggleCart()"></div>
+<div id="cart-drawer">
+  <div class="cart-header">
+    <span class="cart-title">Seu carrinho</span>
+    <button class="cart-close" onclick="toggleCart()">×</button>
+  </div>
+  <div class="cart-items" id="cart-items-list"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-val" id="cart-total">R$ 0,00</span>
+    </div>
+    <button class="btn-checkout" onclick="finalizarPedido()">Finalizar pedido</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBRa5X6Oj8d3mq0i2xzjTFs_GCFyuVvrDg",
+  authDomain: "test-site383.firebaseapp.com",
+  projectId: "test-site383",
+  storageBucket: "test-site383.firebasestorage.app",
+  messagingSenderId: "593942751976",
+  appId: "1:593942751976:web:4e84433e310fdc77aa375d",
+  measurementId: "G-9L26H2ZQ0H"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+window.db = db;
+window.fsUtils = { collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, updateDoc };
+
+document.getElementById('firebase-status').textContent = '● Firebase conectado';
+document.getElementById('firebase-status').style.color = '#4AA259';
+
+// Listener produtos em tempo real
+const qProd = query(collection(db, 'produtos'), orderBy('criadoEm', 'desc'));
+onSnapshot(qProd, (snap) => {
+  window.produtos = [];
+  snap.forEach(d => window.produtos.push({ id: d.id, ...d.data() }));
+  renderProdutos();
+  renderTabelaAdmin();
+  atualizarStats();
+});
+
+// Listener pedidos em tempo real
+const qOrd = query(collection(db, 'pedidos'), orderBy('criadoEm', 'desc'));
+onSnapshot(qOrd, (snap) => {
+  window.pedidos = [];
+  snap.forEach(d => window.pedidos.push({ id: d.id, ...d.data() }));
+  renderOrders();
+  atualizarStats();
+});
+
+window.salvarProduto = async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btn-save-prod');
+  btn.textContent = 'Salvando...'; btn.disabled = true;
+  const descPct = parseInt(document.getElementById('p-desc-pct').value) || 0;
+  const preco = parseFloat(document.getElementById('p-preco').value);
+  await addDoc(collection(db, 'produtos'), {
+    nome: document.getElementById('p-nome').value,
+    descricao: document.getElementById('p-desc').value,
+    preco,
+    precoOriginal: descPct > 0 ? preco : null,
+    precoComDesconto: descPct > 0 ? +(preco * (1 - descPct/100)).toFixed(2) : null,
+    estoque: parseInt(document.getElementById('p-estoque').value),
+    categoria: document.getElementById('p-cat').value,
+    desconto: descPct,
+    emoji: document.getElementById('p-emoji').value || '🏺',
+    criadoEm: serverTimestamp()
+  });
+  e.target.reset();
+  btn.textContent = '+ Salvar produto'; btn.disabled = false;
+  mostrarToast('Produto adicionado!');
+};
+
+window.deletarProduto = async (id) => {
+  if (!confirm('Remover produto?')) return;
+  await deleteDoc(doc(db, 'produtos', id));
+  mostrarToast('Produto removido.');
+};
+
+window.finalizarPedido = async () => {
+  if (!window.carrinho || window.carrinho.length === 0) { mostrarToast('Carrinho vazio!'); return; }
+  const total = window.carrinho.reduce((s, i) => s + (i.precoFinal * i.qty), 0);
+  await addDoc(collection(db, 'pedidos'), {
+    itens: window.carrinho.map(i => ({ id: i.id, nome: i.nome, qty: i.qty, preco: i.precoFinal })),
+    total: +total.toFixed(2),
+    status: 'novo',
+    criadoEm: serverTimestamp()
+  });
+  window.carrinho = [];
+  renderCarrinho();
+  toggleCart();
+  mostrarToast('Pedido realizado com sucesso!');
+};
+
+window.atualizarStats = () => {
+  const prods = window.produtos || [];
+  const peds = window.pedidos || [];
+  document.getElementById('stat-prods').textContent = prods.length;
+  document.getElementById('stat-orders').textContent = peds.length;
+  const receita = peds.reduce((s, p) => s + (p.total || 0), 0);
+  document.getElementById('stat-revenue').textContent = receita.toLocaleString('pt-BR', {minimumFractionDigits:0,maximumFractionDigits:0});
+  const itens = peds.reduce((s, p) => s + (p.itens || []).reduce((a, i) => a + i.qty, 0), 0);
+  document.getElementById('stat-items').textContent = itens;
+};
+</script>
+
+<script>
+// ============================================================
+// THREE.JS HERO 3D
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvas3d');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 5);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+  scene.add(ambientLight);
+  const goldLight = new THREE.PointLight(0xC9A84C, 3, 15);
+  goldLight.position.set(3, 3, 3);
+  scene.add(goldLight);
+  const blueLight = new THREE.PointLight(0x1a1060, 2, 15);
+  blueLight.position.set(-3, -2, 2);
+  scene.add(blueLight);
+  const rimLight = new THREE.DirectionalLight(0xC9A84C, 0.8);
+  rimLight.position.set(-2, 4, -2);
+  scene.add(rimLight);
+
+  // Materials
+  const goldMat = new THREE.MeshStandardMaterial({
+    color: 0xC9A84C, metalness: 0.95, roughness: 0.1,
+    envMapIntensity: 1.5
+  });
+  const darkMat = new THREE.MeshStandardMaterial({
+    color: 0x1a1814, metalness: 0.7, roughness: 0.3
+  });
+  const glassMat = new THREE.MeshStandardMaterial({
+    color: 0xC9A84C, metalness: 1, roughness: 0.05,
+    transparent: true, opacity: 0.4
+  });
+
+  // Floating objects group
+  const group = new THREE.Group();
+  scene.add(group);
+
+  // Main sphere (orb)
+  const orbGeo = new THREE.SphereGeometry(1, 64, 64);
+  const orb = new THREE.Mesh(orbGeo, goldMat);
+  group.add(orb);
+
+  // Ring
+  const ringGeo = new THREE.TorusGeometry(1.6, 0.04, 16, 100);
+  const ring = new THREE.Mesh(ringGeo, glassMat);
+  ring.rotation.x = Math.PI / 4;
+  group.add(ring);
+
+  // Ring 2
+  const ring2Geo = new THREE.TorusGeometry(1.9, 0.02, 16, 100);
+  const ring2 = new THREE.Mesh(ring2Geo, glassMat);
+  ring2.rotation.x = -Math.PI / 3;
+  ring2.rotation.y = Math.PI / 5;
+  group.add(ring2);
+
+  // Floating cubes
+  const cubePositions = [
+    [2.5, 0.5, -1], [-2.5, -0.5, -0.5], [1.8, -1.5, 0.5],
+    [-1.5, 1.8, -0.8], [0.5, 2.2, -0.5], [-0.8, -2.2, 0.3]
+  ];
+  const cubes = [];
+  cubePositions.forEach(([x, y, z]) => {
+    const size = 0.12 + Math.random() * 0.15;
+    const geo = Math.random() > 0.5
+      ? new THREE.BoxGeometry(size, size, size)
+      : new THREE.OctahedronGeometry(size);
+    const mat = Math.random() > 0.5 ? goldMat.clone() : darkMat.clone();
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, 0);
+    scene.add(mesh);
+    cubes.push({ mesh, speed: 0.3 + Math.random() * 0.5, offset: Math.random() * Math.PI * 2 });
+  });
+
+  // Particles
+  const particleCount = 200;
+  const positions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount * 3; i++) {
+    positions[i] = (Math.random() - 0.5) * 12;
+  }
+  const particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const particleMat = new THREE.PointsMaterial({ color: 0xC9A84C, size: 0.025, transparent: true, opacity: 0.6 });
+  const particles = new THREE.Points(particleGeo, particleMat);
+  scene.add(particles);
+
+  // Mouse interaction
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = -(e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // Animate
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    group.rotation.y += (mouseX * 0.8 - group.rotation.y) * 0.04;
+    group.rotation.x += (mouseY * 0.4 - group.rotation.x) * 0.04;
+    group.position.y = Math.sin(t * 0.5) * 0.15;
+
+    ring.rotation.z += 0.004;
+    ring2.rotation.z -= 0.003;
+
+    cubes.forEach(({ mesh, speed, offset }) => {
+      mesh.rotation.x += 0.005 * speed;
+      mesh.rotation.y += 0.008 * speed;
+      mesh.position.y += Math.sin(t * speed + offset) * 0.002;
+    });
+
+    particles.rotation.y += 0.0008;
+    goldLight.position.x = Math.sin(t * 0.5) * 4;
+    goldLight.position.z = Math.cos(t * 0.5) * 4;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+// ============================================================
+// PRODUTO MINI-3D CARDS
+// ============================================================
+function criar3DCard(canvas, emoji) {
+  if (!window.THREE) return;
+  const r = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  r.setPixelRatio(1.5);
+  r.setSize(canvas.offsetWidth || 280, canvas.offsetHeight || 320);
+  const s = new THREE.Scene();
+  const c = new THREE.PerspectiveCamera(45, (canvas.offsetWidth || 280) / (canvas.offsetHeight || 320), 0.1, 50);
+  c.position.z = 3.5;
+  s.add(new THREE.AmbientLight(0xffffff, 0.5));
+  const pl = new THREE.PointLight(0xC9A84C, 3, 10);
+  pl.position.set(2, 2, 2);
+  s.add(pl);
+
+  const shapes = [
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.SphereGeometry(0.7, 32, 32),
+    new THREE.TorusGeometry(0.6, 0.25, 16, 50),
+    new THREE.OctahedronGeometry(0.8),
+    new THREE.CylinderGeometry(0.3, 0.6, 1.2, 32),
+  ];
+  const geo = shapes[Math.floor(Math.random() * shapes.length)];
+  const mat = new THREE.MeshStandardMaterial({ color: 0xC9A84C, metalness: 0.9, roughness: 0.15 });
+  const mesh = new THREE.Mesh(geo, mat);
+  s.add(mesh);
+
+  let mx = 0, my = 0;
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+    my = -((e.clientY - rect.top) / rect.height - 0.5) * 2;
+  });
+
+  let frame;
+  const animate = () => {
+    frame = requestAnimationFrame(animate);
+    mesh.rotation.y += (mx * 1.2 - mesh.rotation.y) * 0.06;
+    mesh.rotation.x += (my * 0.6 - mesh.rotation.x) * 0.06;
+    mesh.rotation.y += 0.006;
+    r.render(s, c);
+  };
+  animate();
+}
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+window.produtos = [];
+window.pedidos = [];
+window.carrinho = [];
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+}
+
+// ============================================================
+// RENDER PRODUTOS
+// ============================================================
+function renderProdutos() {
+  const grid = document.getElementById('produtos-grid');
+  const prods = window.produtos;
+  if (!prods || prods.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:5rem;color:var(--muted);font-family:'Cormorant Garamond',serif;font-size:1.3rem;letter-spacing:.05em;">
+      Nenhum produto cadastrado.<br><span style="font-size:.9rem;color:#555">Adicione produtos no painel Admin.</span>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = prods.map(p => {
+    const precoFinal = p.precoComDesconto || p.preco;
+    return `
+    <div class="prod-card" onclick="abrirProduto('${p.id}')">
+      <div class="prod-img-wrap">
+        <canvas class="prod-3d-canvas" data-emoji="${p.emoji || '🏺'}" id="c3d-${p.id}"></canvas>
+        ${p.desconto > 0 ? `<div class="prod-badge off">-${p.desconto}%</div>` : `<div class="prod-badge novo">NOVO</div>`}
+        <div class="prod-overlay">
+          <button class="btn-quick" onclick="event.stopPropagation();adicionarCarrinho('${p.id}')">Adicionar ao carrinho</button>
+        </div>
+      </div>
+      <div class="prod-info">
+        <div class="prod-cat">${p.categoria}</div>
+        <div class="prod-name">${p.nome}</div>
+        <div class="prod-price-row">
+          <span class="prod-price">R$ ${precoFinal.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
+          ${p.precoOriginal ? `<span class="prod-price-old">R$ ${p.precoOriginal.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>` : ''}
+        </div>
+        <div class="prod-actions">
+          <button class="btn-add" onclick="event.stopPropagation();adicionarCarrinho('${p.id}')">+ Adicionar</button>
+          <button class="btn-wish">♡</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Inicia canvas 3D nos cards após render
+  setTimeout(() => {
+    prods.forEach(p => {
+      const canvas = document.getElementById('c3d-' + p.id);
+      if (canvas) criar3DCard(canvas, p.emoji);
+    });
+  }, 100);
+}
+
+// ============================================================
+// RENDER ADMIN TABELA
+// ============================================================
+function renderTabelaAdmin() {
+  const prods = window.produtos;
+  document.getElementById('tbl-count').textContent = prods.length + ' itens';
+  document.getElementById('prod-tbody').innerHTML = prods.map(p => {
+    const precoFinal = p.precoComDesconto || p.preco;
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:1.2rem">${p.emoji || '🏺'}</span>
+          <span class="tbl-name">${p.nome}</span>
+        </div>
+      </td>
+      <td style="font-size:11px;color:var(--muted);letter-spacing:.08em;">${p.categoria}</td>
+      <td class="tbl-price">R$ ${precoFinal.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+      <td><span class="tbl-stock ${p.estoque > 3 ? 'stock-ok' : 'stock-low'}">${p.estoque} un.</span></td>
+      <td><button class="btn-tbl" onclick="window.deletarProduto('${p.id}')" title="Remover">✕</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted);font-size:13px;">Nenhum produto</td></tr>`;
+}
+
+// ============================================================
+// RENDER ORDERS
+// ============================================================
+function renderOrders() {
+  const peds = window.pedidos || [];
+  const el = document.getElementById('orders-list');
+  if (peds.length === 0) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px;text-align:center;padding:1rem;">Nenhum pedido ainda.</div>`;
+    return;
+  }
+  el.innerHTML = peds.slice(0, 8).map(p => {
+    const statusClass = p.status === 'novo' ? 's-novo' : p.status === 'enviado' ? 's-env' : 's-canc';
+    const statusLabel = p.status === 'novo' ? 'Novo' : p.status === 'enviado' ? 'Enviado' : 'Cancelado';
+    const itensCount = (p.itens || []).reduce((s, i) => s + i.qty, 0);
+    return `<div class="order-item">
+      <div>
+        <div style="font-size:12px;color:var(--muted);">${itensCount} item(s)</div>
+      </div>
+      <span class="order-total">R$ ${(p.total || 0).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
+      <span class="badge-status ${statusClass}">${statusLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CARRINHO
+// ============================================================
+function adicionarCarrinho(id) {
+  const prod = window.produtos.find(p => p.id === id);
+  if (!prod) return;
+  const precoFinal = prod.precoComDesconto || prod.preco;
+  const existing = window.carrinho.find(i => i.id === id);
+  if (existing) existing.qty++;
+  else window.carrinho.push({ id, nome: prod.nome, emoji: prod.emoji || '🏺', precoFinal, qty: 1 });
+  renderCarrinho();
+  mostrarToast(`${prod.nome} adicionado!`);
+}
+
+function renderCarrinho() {
+  const list = document.getElementById('cart-items-list');
+  const count = window.carrinho.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cart-count').textContent = count;
+  if (window.carrinho.length === 0) {
+    list.innerHTML = `<div class="cart-empty"><div style="font-size:2rem">🛍️</div><p>Seu carrinho está vazio</p></div>`;
+    document.getElementById('cart-total').textContent = 'R$ 0,00';
+    return;
+  }
+  list.innerHTML = window.carrinho.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-img">${item.emoji}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.nome}</div>
+        <div class="cart-item-price">R$ ${(item.precoFinal * item.qty).toLocaleString('pt-BR', {minimumFractionDigits:2})}</div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="alterarQty('${item.id}',-1)">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="alterarQty('${item.id}',1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item-remove" onclick="removerItem('${item.id}')">×</button>
+    </div>`).join('');
+  const total = window.carrinho.reduce((s, i) => s + i.precoFinal * i.qty, 0);
+  document.getElementById('cart-total').textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2});
+}
+
+function alterarQty(id, delta) {
+  const item = window.carrinho.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) window.carrinho = window.carrinho.filter(i => i.id !== id);
+  renderCarrinho();
+}
+
+function removerItem(id) {
+  window.carrinho = window.carrinho.filter(i => i.id !== id);
+  renderCarrinho();
+}
+
+function toggleCart() {
+  document.getElementById('cart-drawer').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+
+// ============================================================
+// CURSOR CUSTOM
+// ============================================================
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', (e) => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  setTimeout(() => {
+    ring.style.left = e.clientX + 'px';
+    ring.style.top = e.clientY + 'px';
+  }, 60);
+});
+document.querySelectorAll('button,a,[onclick]').forEach(el => {
+  el.addEventListener('mouseenter', () => { cursor.style.width = '18px'; cursor.style.height = '18px'; });
+  el.addEventListener('mouseleave', () => { cursor.style.width = '10px'; cursor.style.height = '10px'; });
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+function mostrarToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+window.mostrarToast = mostrarToast;
+
+// ============================================================
+// LOADER
+// ============================================================
+window.addEventListener('load', () => {
+  const bar = document.getElementById('loader-bar');
+  bar.style.width = '100%';
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+  }, 2000);
+});
+
+window.showView = showView;
+window.adicionarCarrinho = adicionarCarrinho;
+window.alterarQty = alterarQty;
+window.removerItem = removerItem;
+window.toggleCart = toggleCart;
+window.renderProdutos = renderProdutos;
+window.renderTabelaAdmin = renderTabelaAdmin;
+window.renderOrders = renderOrders;
+window.renderCarrinho = renderCarrinho;
+</script>
+</body>
+</html>
